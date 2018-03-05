@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.aaron.bluetoothdemo">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <!--
+    本应用如果需要Ble才可用，添加uses-feature required 设置为true，如果不需要也可以设置为false
+    在运行时可以通过  PackageManager.hasSystemFeature(): 判断Ble是否可用
+    -->
+    <uses-feature
+        android:name="android.bluetooth.le"
+        android:required="true" />
+    <!-- Android 5.0之前是android.hardware.bluetooth_le -->
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+    <!-- 对于android 6.0的设备，则需要再加上这两条权限 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ble.CenterActivity"/>
+        <activity android:name=".ble.DeviceControlActivity"/>
+        <activity android:name=".ble.PeripheralActivity" />
+        <activity android:name=".TraditionalBluetoothActivity" />
+        <service
+            android:name=".ble.BluetoothLeService"
+            android:enabled="true" />
+    </application>
+
+</manifest>
