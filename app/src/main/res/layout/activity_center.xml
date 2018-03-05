@@ -18,10 +18,10 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
-        app:layout_constraintTop_toBottomOf="@+id/button1"
+        android:text="显示设备所有服务"
         app:layout_constraintLeft_toLeftOf="@+id/button1"
-        app:layout_constraintRight_toRightOf="@+id/button1" />
+        app:layout_constraintRight_toRightOf="@+id/button1"
+        app:layout_constraintTop_toBottomOf="@+id/button1" />
 
     <TextView
         android:id="@+id/tv_dev"

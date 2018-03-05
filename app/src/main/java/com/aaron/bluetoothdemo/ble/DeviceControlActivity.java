@@ -10,10 +10,12 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.aaron.bluetoothdemo.R;
 
@@ -28,6 +30,8 @@ public class DeviceControlActivity extends Activity {
     private BluetoothLeService mBluetoothLeService;//新建一个BluetoothLeService蓝牙服务的类
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();//用来存储所有的服务
+
+    private TextView tv_cha;
 
     /**
      * Code to manage Service lifecycle.
@@ -63,6 +67,8 @@ public class DeviceControlActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_characteristics);
 
+        tv_cha = (TextView)findViewById(R.id.tv_cha);
+
         final Intent intent = getIntent();//从MainActivity中获得intent消息（设备信息,并将其保存在device_name和device_address中
         num_device = Integer.parseInt(intent.getStringExtra("num_device"));
         Log.i(TAG, "++onCreate++");
@@ -75,8 +81,21 @@ public class DeviceControlActivity extends Activity {
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        registerReceiver(mGattUpdateReceiver,intentFilter);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
+        unbindService(mServiceConnection);
+    }
 
     /**
      * 上面讲了函数从oncreate的bind建立和蓝牙server之间的连接，
@@ -115,6 +134,7 @@ public class DeviceControlActivity extends Activity {
         if (gattServices == null) return;
         mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();//保存所有的characteristic（直接保存characteristic）用于系统调用
 
+        StringBuilder builder = new StringBuilder(tv_cha.getText().toString());
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {//遍历gattServices中的每一个gattService（即遍历每个服务）
             List<BluetoothGattCharacteristic> gattCharacteristics =//获取当前一个服务的所有的characteristic
@@ -122,11 +142,57 @@ public class DeviceControlActivity extends Activity {
             ArrayList<BluetoothGattCharacteristic> charas =//[保存每个服务的characteristic]
                     new ArrayList<BluetoothGattCharacteristic>();
 
+            builder.append("\n Service UUID:"+gattService.getUuid()+"\n Characteristic size："
+                    +gattCharacteristics.size()+"\n Characteristic:");
+
             // Loops through available Characteristics.
             for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {//对每个服务的characteristic进行遍历
                 charas.add(gattCharacteristic);
+                builder.append(gattCharacteristic.getUuid()+"\n");
             }
+            tv_cha.setText(builder.toString());
             mGattCharacteristics.add(charas);//这里添加！！！
         }
     }
+
+/*
+  输出：
+CenterActivity: Note6 63:C1:EE:B5:1B:08
+CenterActivity: Device name: Note6
+CenterActivity: Device address: 63:C1:EE:B5:1B:08
+CenterActivity: Device service UUIDs: null
+CenterActivity: Record advertise flags: 0x1a
+CenterActivity: Record Tx power level: -7
+CenterActivity: Record device name: Note6
+CenterActivity: Record service UUIDs: [0000fff0-0000-1000-8000-00805f9b34fb]
+CenterActivity: Record service data: {}
+CenterActivity: Device name: Note6
+CenterActivity: Device address: 63:C1:EE:B5:1B:08
+CenterActivity: Device service UUIDs: null
+CenterActivity: Record advertise flags: 0x1a
+CenterActivity: Record Tx power level: -7
+CenterActivity: Record device name: Note6
+CenterActivity: Record service UUIDs: [0000fff0-0000-1000-8000-00805f9b34fb]
+CenterActivity: Record service data: {}
+
+I/DeviceControlActivity: ++onCreate++
+I/DeviceControlActivity: 1
+I/DeviceControlActivity: Note6 63:C1:EE:B5:1B:08
+D/BluetoothGatt: connect() - device: 63:C1:EE:B5:1B:08, auto: false
+D/BluetoothGatt: registerApp()
+D/BluetoothGatt: registerApp() - UUID=dd3c808d-f644-414f-ba89-fcb4c37f8e0b
+D/BluetoothGatt: onClientRegistered() - status=0 clientIf=5
+D/BluetoothLeService: Trying to create a new connection.
+I/Choreographer: Skipped 121 frames!  The application may be doing too much work on its main thread.
+D/BluetoothGatt: onClientConnectionState() - status=0 clientIf=5 device=63:C1:EE:B5:1B:08
+I/DeviceControlActivity: ACTION_GATT_CONNECTED
+I/BluetoothLeService: Connected to GATT server.
+D/BluetoothGatt: discoverServices() - device: 63:C1:EE:B5:1B:08
+I/BluetoothLeService: Attempting to start service discovery: 0 true
+D/BluetoothGatt: discoverServices() - device: 63:C1:EE:B5:1B:08
+D/BluetoothGatt: onSearchComplete() = Device=63:C1:EE:B5:1B:08 Status=0
+I/DeviceControlActivity: ACTION_GATT_SERVICES_DISCOVERED
+I/BluetoothLeService: getSupportedGattServices: 0
+*/
+
 }
